@@ -76,7 +76,7 @@ const QuizGenerator: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste the material you want to be quizzed on..."
-              className="w-full h-48 p-4 bg-surface-50 rounded-premium border-none focus:ring-2 focus:ring-brand-primary/20 resize-none transition-all"
+              className="w-full h-48 p-4 bg-surface-50 dark:bg-white/5 text-surface-900 dark:text-white placeholder-muted-slate rounded-premium border-none focus:ring-2 focus:ring-brand-primary/20 resize-none transition-all"
             />
           </div>
 
@@ -100,7 +100,7 @@ const QuizGenerator: React.FC = () => {
   if (currentStep === "quiz") {
     return (
       <div className="max-w-3xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
-        <div className="flex justify-between items-center bg-white p-4 rounded-premium sticky top-4 z-10 border border-surface-100 shadow-sm">
+        <div className="flex justify-between items-center bg-white dark:bg-surface-900 p-4 rounded-premium sticky top-4 z-10 border border-surface-100 dark:border-white/10 shadow-sm">
           <span className="font-bold text-brand-primary">AI Study Quiz</span>
           <div className="flex gap-1">
             {questions.map((_, i) => (
@@ -125,7 +125,7 @@ const QuizGenerator: React.FC = () => {
                   className={`p-4 rounded-premium text-left transition-all border-2 ${
                     userAnswers[qIdx] === option
                       ? "border-brand-primary bg-brand-light font-bold text-brand-primary"
-                      : "border-transparent bg-surface-50 hover:bg-white hover:border-brand-primary/30"
+                      : "border-transparent bg-surface-50 dark:bg-white/5 text-surface-900 dark:text-white hover:bg-white dark:hover:bg-white/10 hover:border-brand-primary/30"
                   }`}
                 >
                   {option}
@@ -167,7 +167,7 @@ const QuizGenerator: React.FC = () => {
           {questions.map((q, i) => (
             <div
               key={i}
-              className="p-4 rounded-lg bg-surface-50 border border-surface-100"
+              className="p-4 rounded-lg bg-surface-50 dark:bg-white/5 border border-surface-100 dark:border-white/10"
             >
               <div className="flex items-start gap-3">
                 {userAnswers[i] === q.answer ? (
@@ -192,7 +192,7 @@ const QuizGenerator: React.FC = () => {
                     {showExplanation === i ? "Hide Explanation" : "Explain Why"}
                   </button>
                   {showExplanation === i && (
-                    <p className="text-xs text-muted-slate mt-2 italic bg-white p-3 rounded border border-brand-light">
+                    <p className="text-xs text-muted-slate mt-2 italic bg-white dark:bg-white/5 p-3 rounded border border-brand-light dark:border-white/10">
                       {q.explanation}
                     </p>
                   )}

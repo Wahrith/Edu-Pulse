@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Summarizer from "./pages/Summarizer";
 import QuizGenerator from "./pages/QuizGenerator";
 import ExamRoadmap from "./pages/ExamRoadmap";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -23,19 +24,7 @@ function App() {
               <Route path="/notes" element={<Summarizer />} />
               <Route path="/quiz" element={<QuizGenerator />} />
               <Route path="/roadmap" element={<ExamRoadmap />} />
-              <Route
-                path="/settings"
-                element={
-                  <div className="glass-card p-8">
-                    <h2 className="text-2xl font-display font-bold">
-                      Settings
-                    </h2>
-                    <p className="text-muted-slate mt-2">
-                      Account settings coming soon.
-                    </p>
-                  </div>
-                }
-              />
+              <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
 

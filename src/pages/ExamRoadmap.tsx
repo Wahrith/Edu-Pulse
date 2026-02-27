@@ -282,7 +282,7 @@ const ExamRoadmap: React.FC = () => {
                 className={`flex gap-4 p-6 rounded-premium border transition-all duration-200 ${
                   m.completed
                     ? "bg-sage-green/10 border-sage-green/30"
-                    : "bg-white border-surface-100 hover:border-brand-primary/30 hover:shadow-sm"
+                    : "bg-white dark:bg-white/5 border-surface-100 dark:border-white/10 hover:border-brand-primary/30 hover:shadow-sm"
                 }`}
               >
                 <div className="flex flex-col items-center gap-2">
