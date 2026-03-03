@@ -74,7 +74,7 @@ const InteractiveTutor: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-8 right-8 w-[400px] h-[600px] bg-white rounded-premium shadow-2xl flex flex-col border border-surface-100 z-50 animate-in slide-in-from-bottom-8 overflow-hidden">
+    <div className="fixed bottom-8 right-8 w-[400px] h-[600px] bg-white dark:bg-surface-900 rounded-premium shadow-2xl flex flex-col border border-surface-100 dark:border-white/10 z-50 animate-in slide-in-from-bottom-8 overflow-hidden">
       {/* Header */}
       <div className="bg-brand-primary p-4 text-white flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -95,7 +95,7 @@ const InteractiveTutor: React.FC = () => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-auto p-4 space-y-4 bg-surface-50/50">
+      <div className="flex-1 overflow-auto p-4 space-y-4 bg-surface-50/50 dark:bg-white/5">
         {messages.map((m, i) => (
           <div
             key={i}
@@ -105,7 +105,7 @@ const InteractiveTutor: React.FC = () => {
               className={`max-w-[85%] p-3 rounded-premium text-sm ${
                 m.role === "user"
                   ? "bg-brand-primary text-white rounded-br-none"
-                  : "bg-white border border-surface-100 text-surface-900 rounded-bl-none shadow-sm"
+                  : "bg-white dark:bg-white/10 border border-surface-100 dark:border-white/10 text-surface-900 dark:text-white rounded-bl-none shadow-sm"
               }`}
             >
               <div className="flex items-center gap-2 mb-1 opacity-50 text-[10px]">
@@ -126,7 +126,7 @@ const InteractiveTutor: React.FC = () => {
         ))}
         {loading && (
           <div className="flex justify-start animate-in fade-in">
-            <div className="bg-white border border-surface-100 p-3 rounded-premium rounded-bl-none shadow-sm">
+            <div className="bg-white dark:bg-surface-800 border border-surface-100 dark:border-white/10 p-3 rounded-premium rounded-bl-none shadow-sm">
               <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
             </div>
           </div>
@@ -135,7 +135,7 @@ const InteractiveTutor: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white border-t border-surface-100">
+      <div className="p-4 bg-white dark:bg-surface-900 border-t border-surface-100 dark:border-white/10">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -148,7 +148,7 @@ const InteractiveTutor: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me to explain a concept..."
-            className="flex-1 bg-surface-50 border-none rounded-premium px-4 py-2 text-sm focus:ring-2 focus:ring-brand-primary/20"
+            className="flex-1 bg-surface-50 dark:bg-white/5 text-surface-900 dark:text-white placeholder-muted-slate border-none rounded-premium px-4 py-2 text-sm focus:ring-2 focus:ring-brand-primary/20"
           />
           <button
             type="submit"
