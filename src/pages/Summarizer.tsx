@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Sparkles, FileText, Loader2, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { summarizeText } from "../api/ai/gemini";
+import { summarizeText } from "../api/ai/groq";
 
 const Summarizer: React.FC = () => {
   const [input, setInput] = useState("");

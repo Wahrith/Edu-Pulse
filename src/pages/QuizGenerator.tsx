@@ -8,7 +8,7 @@ import {
   RefreshCcw,
   Sparkles,
 } from "lucide-react";
-import { generateQuiz } from "../api/ai/gemini";
+import { generateQuiz } from "../api/ai/groq";
 
 interface Question {
   question: string;

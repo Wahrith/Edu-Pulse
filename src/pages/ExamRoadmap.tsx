@@ -9,7 +9,7 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react";
-import { generateRoadmap } from "../api/ai/gemini";
+import { generateRoadmap } from "../api/ai/groq";
 
 interface Milestone {
   day: number;

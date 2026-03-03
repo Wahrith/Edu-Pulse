@@ -12,7 +12,7 @@ EduPulse is a web application that turns your raw study material into structured
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Firebase Setup](#firebase-setup)
-  - [Gemini API Setup](#gemini-api-setup)
+  - [Groq API Setup](#groq-api-setup)
   - [Environment Variables](#environment-variables)
   - [Running Locally](#running-locally)
 - [Pages & Functionality](#pages--functionality)
@@ -36,7 +36,7 @@ EduPulse is a web application that turns your raw study material into structured
 | **AI Summarizer** | Paste any study material and receive a clean, markdown-formatted study guide with key concepts, bullet summaries, and a quick recap. |
 | **Practice Quiz** | Auto-generates 5 multiple-choice questions from your content, scores your answers, and explains every correct answer. |
 | **Exam Roadmap** | Input your exam name, subject, and date; the AI builds a progressive day-by-day study plan capped at 15 milestones with a final mock-exam revision day. |
-| **AI Tutor** | A floating chat assistant (bottom-right of every page) powered by Gemini that maintains full conversation history and answers academic questions in markdown. |
+| **AI Tutor** | A floating chat assistant (bottom-right of every page) powered by Groq that maintains full conversation history and answers academic questions in markdown. |
 | **Account Settings** | Update display name, change password (with current-password re-authentication), and permanently delete your account with confirmation. |
 | **Dark Mode** | Full dark/light theme toggle persisted in `localStorage`, applied via Tailwind's `class` strategy. |
 | **Authentication** | Email/password sign-up & sign-in, Google OAuth (redirect flow), password reset via email, and friendly inline error messages. |
@@ -68,7 +68,7 @@ EduPulse is a web application that turns your raw study material into structured
 | Firebase Auth | User authentication (email/password + Google OAuth) |
 | Firebase Firestore | Database (initialised and exported, ready for future features) |
 | Firebase Storage | File storage (initialised and exported, ready for future features) |
-| Google Gemini AI (`gemini-1.5-flash-latest`) | All AI features — summarisation, quiz generation, roadmap planning, tutoring |
+| Groq AI (`llama-3.3-70b-versatile`) | All AI features — summarisation, quiz generation, roadmap planning, tutoring |
 
 ---
 
@@ -80,7 +80,7 @@ STUDY HELPER/
 ├── src/
 │   ├── api/
 │   │   ├── ai/
-│   │   │   └── gemini.ts          # All Gemini AI calls (summarize, quiz, roadmap, chat)
+│   │   │   └── groq.ts            # All Groq AI calls (summarize, quiz, roadmap, chat)
 │   │   └── firebase/
 │   │       └── config.ts          # Firebase app init — exports auth, db, storage
 │   ├── components/
@@ -120,7 +120,7 @@ STUDY HELPER/
 - **Node.js** 18 or later (check with `node -v`)
 - **npm** (bundled with Node) — or yarn / pnpm if you prefer
 - A **Firebase project** (free Spark plan is sufficient)
-- A **Google Gemini API key** (free tier available at [Google AI Studio](https://aistudio.google.com))
+- A **Groq API key** (free tier available at [console.groq.com](https://console.groq.com))
 
 ---
 
@@ -137,11 +137,11 @@ STUDY HELPER/
 
 ---
 
-### Gemini API Setup
+### Groq API Setup
 
-1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Click **Create API key** and copy it.
-3. The app uses the `gemini-1.5-flash-latest` model for all AI features (summarisation, quiz, roadmap, and chat).
+1. Visit [console.groq.com](https://console.groq.com) and sign up for a free account.
+2. Navigate to **API Keys** and click **Create API key**. Copy it.
+3. The app uses the `llama-3.3-70b-versatile` model for all AI features (summarisation, quiz, roadmap, and chat). The free tier allows 14,400 requests/day.
 
 ---
 
@@ -158,8 +158,8 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 
-# Gemini
-VITE_GEMINI_API_KEY=your_gemini_api_key
+# Groq
+VITE_GROQ_API_KEY=your_groq_api_key
 ```
 
 All variables must be prefixed with `VITE_` so that Vite exposes them to the browser bundle.
@@ -215,7 +215,7 @@ The landing page after a successful login. It displays:
 
 1. Paste any study notes, textbook excerpts, or article content into the left text area.
 2. Click **Generate AI Summary**.
-3. Gemini processes the input and returns a structured markdown study guide containing:
+3. Groq processes the input and returns a structured markdown study guide containing:
    - A high-level overview
    - Key concepts and definitions
    - A bulleted summary of important points
@@ -235,7 +235,7 @@ A three-step sequential flow:
 |---|---|---|
 | 1 | **Input** | Paste study material and click *Generate 5 MCQs*. |
 | 2 | **Quiz** | Five questions are shown with four options each. A progress indicator at the top tracks how many questions have been answered. The selected option is highlighted in brand purple. |
-| 3 | **Results** | Your score is displayed prominently. Every question is reviewed with the correct answer highlighted in green, your answer (if wrong) in red, and an expandable *Explain Why* toggle that reveals Gemini's explanation for that question. |
+| 3 | **Results** | Your score is displayed prominently. Every question is reviewed with the correct answer highlighted in green, your answer (if wrong) in red, and an expandable *Explain Why* toggle that reveals Groq's explanation for that question. |
 
 The quiz can be fully reset at any point via the *Start New Quiz* button.
 
@@ -247,7 +247,7 @@ The quiz can be fully reset at any point via the *Start New Quiz* button.
 
 1. Fill in three fields: **Exam Name** (free text, e.g. "WAEC Chemistry"), **Exam Date** (date picker), and **Focus Subject** (searchable dropdown with 13 presets plus free-text custom entry).
 2. Click **Generate Study Plan**.
-3. The app calculates days remaining until the exam (clamped between 3 and 30), sends this to Gemini, and receives up to 15 progressive daily milestones. The final milestone is always a *"Final Review & Mock Exam"* day.
+3. The app calculates days remaining until the exam (clamped between 3 and 30), sends this to Groq, and receives up to 15 progressive daily milestones. The final milestone is always a *"Final Review & Mock Exam"* day.
 4. Each milestone card displays:
    - A numbered circle button (click to **mark complete / incomplete** — updates locally with a green checkmark and strikethrough).
    - The **topic title** and **specific focus activities** for that day.
@@ -263,7 +263,7 @@ Available on **every page** as a floating button in the bottom-right corner.
 
 - Click the bouncing chat bubble (with a green "online" indicator) to open a 400 × 600 px chat panel.
 - Type any academic question and press **Enter** or the send arrow.
-- The tutor uses Gemini's `startChat` API with the full **conversation history** passed on each message, so it remembers earlier context within the session.
+- The tutor sends the full **conversation history** as a messages array to Groq's chat completions API on each request, so it remembers earlier context within the session.
 - All responses are rendered as markdown (supports tables, code blocks, bold, lists via remark-gfm).
 - Close with the **×** button; the conversation persists in local state until the page refreshes.
 - A typing indicator (spinning loader) is shown while the response is being generated.

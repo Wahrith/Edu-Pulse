@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { chatWithTutor } from "../../api/ai/gemini";
+import { chatWithTutor } from "../../api/ai/groq";
 
 interface Message {
   role: "user" | "model";
@@ -82,7 +82,7 @@ const InteractiveTutor: React.FC = () => {
           <div>
             <h3 className="font-bold text-sm">EduPulse AI Tutor</h3>
             <p className="text-[10px] opacity-80 flex items-center gap-1">
-              <Sparkles className="w-2 h-2" /> Powered by Gemini
+              <Sparkles className="w-2 h-2" /> Powered by Groq
             </p>
           </div>
         </div>

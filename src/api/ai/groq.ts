@@ -1,9 +1,20 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(API_KEY);
+const client = new Groq({
+  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
 
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+// llama-3.3-70b-versatile: 14,400 req/day, 6,000 tokens/min on the free tier
+const MODEL = "llama-3.3-70b-versatile";
+
+async function complete(prompt: string): Promise<string> {
+  const result = await client.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: "user", content: prompt }],
+  });
+  return result.choices[0].message.content ?? "";
+}
 
 export const summarizeText = async (text: string) => {
   const prompt = `
@@ -13,17 +24,15 @@ export const summarizeText = async (text: string) => {
     2. Key concepts and definitions.
     3. Bulleted summary of important points.
     4. A 'Quick Recap' section at the end.
-    
+
     Material:
     ${text}
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    return await complete(prompt);
   } catch (error) {
-    console.error("Gemini Summarization Error:", error);
+    console.error("Summarization Error:", error);
     throw new Error("Failed to generate summary. Please check your API key.");
   }
 };
@@ -40,18 +49,17 @@ export const generateQuiz = async (text: string) => {
         "explanation": "string"
       }
     ]
-    
+
     Material:
     ${text}
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const cleanedText = response.text().replace(/```json|```/g, "").trim();
+    const raw = await complete(prompt);
+    const cleanedText = raw.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanedText);
   } catch (error) {
-    console.error("Gemini Quiz Generation Error:", error);
+    console.error("Quiz Generation Error:", error);
     throw new Error("Failed to generate quiz. Ensure the content is descriptive enough.");
   }
 };
@@ -61,7 +69,7 @@ export const generateRoadmap = async (examName: string, subject: string, daysUnt
   const prompt = `
     You are an expert academic planner. Create a study roadmap for a student preparing for "${examName}" in the subject "${subject}".
     They have ${numDays} days until the exam.
-    
+
     Return the response ONLY as a JSON array of objects with this structure:
     [
       {
@@ -71,37 +79,48 @@ export const generateRoadmap = async (examName: string, subject: string, daysUnt
         "completed": false
       }
     ]
-    
+
     Create exactly ${Math.min(numDays, 15)} milestones that cover the most important topics.
     Make the plan progressive — start with foundations and build to advanced topics and revision.
     The last milestone should always be "Final Review & Mock Exam".
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const cleanedText = response.text().replace(/```json|```/g, "").trim();
+    const raw = await complete(prompt);
+    const cleanedText = raw.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanedText);
   } catch (error) {
-    console.error("Gemini Roadmap Generation Error:", error);
+    console.error("Roadmap Generation Error:", error);
     throw new Error("Failed to generate study roadmap. Please try again.");
   }
 };
 
-export const chatWithTutor = async (history: { role: string; parts: { text: string }[] }[], message: string) => {
-  const chat = model.startChat({
-    history: history,
-    generationConfig: {
-      maxOutputTokens: 1000,
+export const chatWithTutor = async (
+  history: { role: string; parts: { text: string }[] }[],
+  message: string,
+) => {
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content:
+        "You are an expert AI Study Tutor. Help students understand academic concepts clearly and thoroughly. Use markdown formatting in your responses.",
     },
-  });
+    ...history.map((m) => ({
+      role: (m.role === "model" ? "assistant" : "user") as "user" | "assistant",
+      content: m.parts[0].text,
+    })),
+    { role: "user" as const, content: message },
+  ];
 
   try {
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    return response.text();
+    const result = await client.chat.completions.create({
+      model: MODEL,
+      messages,
+      max_tokens: 1000,
+    });
+    return result.choices[0].message.content ?? "";
   } catch (error) {
-    console.error("Gemini Chat Error:", error);
+    console.error("Chat Error:", error);
     throw new Error("Tutor is currently offline. Please try again later.");
   }
 };
