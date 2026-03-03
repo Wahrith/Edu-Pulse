@@ -18,7 +18,6 @@ import {
   EmailAuthProvider,
   deleteUser,
 } from "firebase/auth";
-import { auth } from "../api/firebase/config";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -26,13 +25,11 @@ const Settings: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Profile state
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [profileError, setProfileError] = useState("");
 
-  // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,7 +40,6 @@ const Settings: React.FC = () => {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
-  // Delete account state
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -154,7 +150,6 @@ const Settings: React.FC = () => {
         </p>
       </div>
 
-      {/* Profile Section */}
       <div className="glass-card p-6 space-y-5">
         <div className="flex items-center gap-2 font-semibold text-surface-900 dark:text-white">
           <User className="w-5 h-5 text-brand-primary" />
@@ -212,7 +207,6 @@ const Settings: React.FC = () => {
         </button>
       </div>
 
-      {/* Password Section */}
       {isEmailProvider && (
         <div className="glass-card p-6 space-y-5">
           <div className="flex items-center gap-2 font-semibold text-surface-900 dark:text-white">
@@ -326,7 +320,6 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* Appearance Section */}
       <div className="glass-card p-6 space-y-4">
         <div className="flex items-center gap-2 font-semibold text-surface-900 dark:text-white">
           <Palette className="w-5 h-5 text-brand-primary" />
@@ -342,7 +335,6 @@ const Settings: React.FC = () => {
         </p>
       </div>
 
-      {/* Danger Zone */}
       {isEmailProvider && (
         <div className="glass-card p-6 space-y-5 border border-red-200 dark:border-red-500/30">
           <div className="flex items-center gap-2 font-semibold text-red-600 dark:text-red-400">
