@@ -9,6 +9,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { generateQuiz } from "../api/ai/groq";
+import { useAuth } from "../hooks/useAuth";
+import { recordActivity, recordQuizCompletion } from "../api/firebase/userStats";
+
+const COUNT_OPTIONS = [5, 10, 15, 20];
 
 interface Question {
   question: string;
@@ -18,7 +22,9 @@ interface Question {
 }
 
 const QuizGenerator: React.FC = () => {
+  const { user } = useAuth();
   const [input, setInput] = useState("");
+  const [count, setCount] = useState(5);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<"input" | "quiz" | "result">(
@@ -28,14 +34,20 @@ const QuizGenerator: React.FC = () => {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showExplanation, setShowExplanation] = useState<number | null>(null);
 
+  const score = questions.reduce(
+    (acc, q, idx) => acc + (userAnswers[idx] === q.answer ? 1 : 0),
+    0,
+  );
+
   const handleGenerate = async () => {
     if (!input.trim()) return;
     setLoading(true);
     try {
-      const result = await generateQuiz(input);
+      const result = await generateQuiz(input, count);
       setQuestions(result);
       setUserAnswers(new Array(result.length).fill(""));
       setCurrentStep("quiz");
+      if (user) recordActivity(user.uid).catch(() => {});
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -49,10 +61,10 @@ const QuizGenerator: React.FC = () => {
     setUserAnswers(newAnswers);
   };
 
-  const score = questions.reduce(
-    (acc, q, idx) => acc + (userAnswers[idx] === q.answer ? 1 : 0),
-    0,
-  );
+  const handleFinishQuiz = () => {
+    setCurrentStep("result");
+    if (user) recordQuizCompletion(user.uid, score).catch(() => {});
+  };
 
   if (currentStep === "input") {
     return (
@@ -80,6 +92,29 @@ const QuizGenerator: React.FC = () => {
             />
           </div>
 
+          {/* MCQ Count Picker */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold flex items-center gap-2">
+              <HelpCircle className="w-4 h-4 text-brand-primary" />
+              Number of Questions
+            </label>
+            <div className="flex gap-3">
+              {COUNT_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setCount(n)}
+                  className={`flex-1 py-2.5 rounded-premium text-sm font-bold border-2 transition-all duration-200 ${
+                    count === n
+                      ? "border-brand-primary bg-brand-primary text-white shadow-float"
+                      : "border-surface-200 dark:border-white/10 text-muted-slate dark:bg-white/5 hover:border-brand-primary/50 hover:text-brand-primary"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button
             onClick={handleGenerate}
             disabled={loading || !input.trim()}
@@ -90,7 +125,7 @@ const QuizGenerator: React.FC = () => {
             ) : (
               <HelpCircle className="w-5 h-5" />
             )}
-            {loading ? "Analyzing Content..." : "Generate 5 MCQs"}
+            {loading ? "Analyzing Content..." : `Generate ${count} MCQs`}
           </button>
         </div>
       </div>
@@ -136,7 +171,7 @@ const QuizGenerator: React.FC = () => {
         ))}
 
         <button
-          onClick={() => setCurrentStep("result")}
+          onClick={handleFinishQuiz}
           disabled={userAnswers.some((a) => !a)}
           className="w-full bg-brand-primary text-white py-5 rounded-premium font-bold shadow-float hover:bg-brand-dark transition-all disabled:opacity-50"
         >

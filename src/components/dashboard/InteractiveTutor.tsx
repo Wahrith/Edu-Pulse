@@ -11,6 +11,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { chatWithTutor } from "../../api/ai/groq";
+import { useAuth } from "../../hooks/useAuth";
+import { recordActivity } from "../../api/firebase/userStats";
 
 interface Message {
   role: "user" | "model";
@@ -18,6 +20,7 @@ interface Message {
 }
 
 const InteractiveTutor: React.FC = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
@@ -54,6 +57,7 @@ const InteractiveTutor: React.FC = () => {
 
       const response = await chatWithTutor(history, userMessage);
       setMessages((prev) => [...prev, { role: "model", content: response }]);
+      if (user) recordActivity(user.uid).catch(() => {});
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     } finally {

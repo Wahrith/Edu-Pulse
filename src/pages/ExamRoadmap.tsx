@@ -10,6 +10,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { generateRoadmap } from "../api/ai/groq";
+import { useAuth } from "../hooks/useAuth";
+import { recordActivity } from "../api/firebase/userStats";
 
 interface Milestone {
   day: number;
@@ -19,6 +21,7 @@ interface Milestone {
 }
 
 const ExamRoadmap: React.FC = () => {
+  const { user } = useAuth();
   const [examName, setExamName] = useState("");
   const [examDate, setExamDate] = useState("");
   const [subject, setSubject] = useState("");
@@ -77,6 +80,7 @@ const ExamRoadmap: React.FC = () => {
 
       const result = await generateRoadmap(examName, subject, daysUntilExam);
       setRoadmap(result);
+      if (user) recordActivity(user.uid).catch(() => {});
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to generate roadmap",

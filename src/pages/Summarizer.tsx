@@ -3,8 +3,11 @@ import { Sparkles, FileText, Loader2, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { summarizeText } from "../api/ai/groq";
+import { useAuth } from "../hooks/useAuth";
+import { recordActivity } from "../api/firebase/userStats";
 
 const Summarizer: React.FC = () => {
+  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,6 +19,7 @@ const Summarizer: React.FC = () => {
     try {
       const result = await summarizeText(input);
       setSummary(result);
+      if (user) recordActivity(user.uid).catch(() => {});
     } catch (error) {
       alert(error instanceof Error ? error.message : "An error occurred");
     } finally {

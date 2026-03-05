@@ -5,7 +5,7 @@ const client = new Groq({
   dangerouslyAllowBrowser: true,
 });
 
-// llama-3.3-70b-versatile: 14,400 req/day, 6,000 tokens/min on the free tier
+// llama-3.3-70b-versatile: 14,400 req/day on the free tier
 const MODEL = "llama-3.3-70b-versatile";
 
 async function complete(prompt: string): Promise<string> {
@@ -16,7 +16,23 @@ async function complete(prompt: string): Promise<string> {
   return result.choices[0].message.content ?? "";
 }
 
-export const summarizeText = async (text: string) => {
+/**
+ * Robustly extracts a JSON array from raw LLM output that may contain
+ * surrounding prose or markdown code fences.
+ */
+function extractJsonArray(raw: string): string {
+  // Strip markdown code fences
+  let text = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  // Find the outermost [ ... ] array boundaries
+  const start = text.indexOf("[");
+  const end = text.lastIndexOf("]");
+  if (start !== -1 && end !== -1 && end > start) {
+    return text.slice(start, end + 1);
+  }
+  return text;
+}
+
+export const summarizeText = async (text: string): Promise<string> => {
   const prompt = `
     You are an expert academic tutor. Please summarize the following study material into a clean, markdown-formatted study guide.
     Include:
@@ -28,7 +44,6 @@ export const summarizeText = async (text: string) => {
     Material:
     ${text}
   `;
-
   try {
     return await complete(prompt);
   } catch (error) {
@@ -37,10 +52,15 @@ export const summarizeText = async (text: string) => {
   }
 };
 
-export const generateQuiz = async (text: string) => {
+export const generateQuiz = async (
+  text: string,
+  count: number = 5,
+): Promise<
+  { question: string; options: string[]; answer: string; explanation: string }[]
+> => {
   const prompt = `
-    You are an expert examiner. Based on the following study material, generate 5 challenging Multiple Choice Questions (MCQs).
-    Return the response ONLY as a JSON array of objects with this structure:
+    You are an expert examiner. Based on the following study material, generate exactly ${count} challenging Multiple Choice Questions.
+    Return ONLY a valid JSON array with no extra text before or after it. Each element must use this exact structure:
     [
       {
         "question": "string",
@@ -53,42 +73,49 @@ export const generateQuiz = async (text: string) => {
     Material:
     ${text}
   `;
-
   try {
     const raw = await complete(prompt);
-    const cleanedText = raw.replace(/```json|```/g, "").trim();
-    return JSON.parse(cleanedText);
+    return JSON.parse(extractJsonArray(raw));
   } catch (error) {
     console.error("Quiz Generation Error:", error);
-    throw new Error("Failed to generate quiz. Ensure the content is descriptive enough.");
+    throw new Error(
+      "Failed to generate quiz. Ensure the content is descriptive enough.",
+    );
   }
 };
 
-export const generateRoadmap = async (examName: string, subject: string, daysUntilExam: number) => {
+export const generateRoadmap = async (
+  examName: string,
+  subject: string,
+  daysUntilExam: number,
+): Promise<
+  { day: number; topic: string; focus: string; completed: boolean }[]
+> => {
   const numDays = Math.min(Math.max(daysUntilExam, 3), 30);
+  const milestones = Math.min(numDays, 15);
   const prompt = `
     You are an expert academic planner. Create a study roadmap for a student preparing for "${examName}" in the subject "${subject}".
     They have ${numDays} days until the exam.
 
-    Return the response ONLY as a JSON array of objects with this structure:
+    Return ONLY a valid JSON array with no extra text before or after it. Create exactly ${milestones} elements using this exact structure:
     [
       {
         "day": 1,
-        "topic": "string (the topic to study)",
-        "focus": "string (specific activities or areas to concentrate on)",
+        "topic": "string",
+        "focus": "string",
         "completed": false
       }
     ]
 
-    Create exactly ${Math.min(numDays, 15)} milestones that cover the most important topics.
-    Make the plan progressive — start with foundations and build to advanced topics and revision.
-    The last milestone should always be "Final Review & Mock Exam".
+    Make the plan progressive — start with foundations, build to advanced topics, and end the final milestone with topic "Final Review & Mock Exam".
   `;
-
   try {
     const raw = await complete(prompt);
-    const cleanedText = raw.replace(/```json|```/g, "").trim();
-    return JSON.parse(cleanedText);
+    const parsed = JSON.parse(extractJsonArray(raw));
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error("Invalid roadmap data returned.");
+    }
+    return parsed;
   } catch (error) {
     console.error("Roadmap Generation Error:", error);
     throw new Error("Failed to generate study roadmap. Please try again.");
@@ -98,7 +125,7 @@ export const generateRoadmap = async (examName: string, subject: string, daysUnt
 export const chatWithTutor = async (
   history: { role: string; parts: { text: string }[] }[],
   message: string,
-) => {
+): Promise<string> => {
   const messages: Groq.Chat.ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -106,12 +133,13 @@ export const chatWithTutor = async (
         "You are an expert AI Study Tutor. Help students understand academic concepts clearly and thoroughly. Use markdown formatting in your responses.",
     },
     ...history.map((m) => ({
-      role: (m.role === "model" ? "assistant" : "user") as "user" | "assistant",
+      role: (m.role === "model" ? "assistant" : "user") as
+        | "user"
+        | "assistant",
       content: m.parts[0].text,
     })),
     { role: "user" as const, content: message },
   ];
-
   try {
     const result = await client.chat.completions.create({
       model: MODEL,
